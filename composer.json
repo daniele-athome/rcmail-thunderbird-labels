@@ -1,9 +1,14 @@
 {
-    "name": "weird-birds/thunderbird_labels",
+    "name": "daniele-athome/roundcube_labels",
     "type": "roundcube-plugin",
     "keywords": ["mail","labels","tags"],
     "license": "BSD-2-Clause",
     "authors": [
+        {
+            "name": "Daniele Ricci",
+            "homepage": "https://github.com/daniele-athome",
+            "role": "Developer"
+        },
         {
             "name": "Michael Kefeder",
             "homepage": "https://github.com/mike-kfed/rcmail-thunderbird-labels",

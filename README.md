@@ -1,40 +1,15 @@
-## Thunderbird Labels Plugin for Roundcube Webmail
+## Labels plugin for Roundcube Webmail
 
-### Features
+Forked from https://github.com/mike-kfed/rcmail-thunderbird-labels
 
-* Displays the message rows using the same colors as Thunderbird does
-* Label of a message can be changed/set exactly like in Thunderbird
-* Keyboard shortcuts on keys 0-5 work like in Thunderbird
-* Integrates into contextmenu plugin when available
-* Works for skins classic and larry
-* currently available translations:
-  * English
-  * French (Français)
-  * German (Deutsch)
-  * Polish (Polski)
-  * Russian (Русский)
-  * Hungarian (Magyar)
-  * Czech (Česky)
-  * Bulgarian (български език)
-  * Catalan (català)
-  * Latvian (latviešu)
-  * Italian (italiano)
-  * Spanish (español)
-  * Slovak (Slovenčina)
-  * Ukranian (українська)
-* [screenshot](http://mike-kfed.github.io/rcmail-thunderbird-labels/)
-
-### TODO
-- allow users to have an arbitrary number of labels
-
-### INSTALL
+### Install
 1. unpack to plugins directory
-2. add `, 'thunderbird_labels'` to `$rcmail_config['plugins']` in main.inc.php
+2. add `, 'labels'` to `$rcmail_config['plugins']` in config.inc.php
 3. if you run a custom skin, e.g. `silver` then you should also symlink or copy the skins folder
    of the plugin to the corresponding skins name, for the example given:
-   `ln -s plugins/thunderbird_labels/skins/larry plugins/thunderbird_labels/skins/silver`
+   `ln -s plugins/labels/skins/larry plugins/labels/skins/silver`
 
-### CONFIGURE
+### Configure
 
 See config.inc.php
 
@@ -44,14 +19,6 @@ See config.inc.php
 - `tb_label_enable_shortcuts = true/false` (can be changed by user in prefs UI)
 - `tb_label_style = 'bullets'` or `'thunderbird'`
 
-### Author
+### Original author
 Michael Kefeder
 https://github.com/mike-kfed/rcmail-thunderbird-labels
-
-### History
-This plugin is based on a patch I found for roundcube 0.3 a long time ago.
-
-Since roundcube is now able to handle the labels without modification of its source I decided to create a plugin.
-
-There exists a "Tags plugin for RoundCube" http://sourceforge.net/projects/tagspluginrc/ which does something similar, my plugin emulates thunderbirds behaviour better I think (coloring the message rows for example)
-

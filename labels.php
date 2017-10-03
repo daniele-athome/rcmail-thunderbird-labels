@@ -52,6 +52,8 @@ class labels extends rcube_plugin
                 'toolbar'
             );
 
+            // JS function "set_flags" => PHP function "set_flags"
+            $this->register_action('plugin.labels.set_flags', [$this, 'set_flags']);
         }
         elseif ($this->rc->task == 'settings')
         {
@@ -167,13 +169,13 @@ class labels extends rcube_plugin
         foreach ($server_flags as $flag) {
             if (substr($flag, 0, 1) != '\\' &&
                 !$this->in_array_caseins($flag, $exclude)) {
-                $labels[] = $flag;
+                $labels[strtoupper($flag)] = $flag;
             }
         }
 
         foreach ($custom_labels as $label) {
             if (!empty($label) && !$this->in_array_caseins($label, $labels)) {
-                $labels[] = $label;
+                $labels[strtoupper($label)] = $label;
             }
         }
 
@@ -231,27 +233,63 @@ class labels extends rcube_plugin
         foreach($args['messages'] as $message)
         {
             #rcube::write_log($this->name, print_r($message->flags, true));
+            #rcube::write_log($this->name, print_r($this->rc->imap->conn->flags, true));
             $message->list_flags['extra_flags']['tb_labels'] = []; # always set extra_flags, needed for javascript later!
             if (is_array($message->flags))
             foreach ($message->flags as $flagname => $flagvalue)
             {
-                if ($this->is_user_label($flagname))
-                    $message->list_flags['extra_flags']['tb_labels'][] = ucfirst(strtolower($flagname));
+                if ($this->is_user_label($flagname)) {
+                    if (isset($this->rc->imap->conn->flags[strtoupper($flagname)])) {
+                        $flag = $this->rc->imap->conn->flags[strtoupper($flagname)];
+                    }
+                    else {
+                        $flag = ucfirst(strtolower($flagname));
+                    }
+                    $message->list_flags['extra_flags']['tb_labels'][] = $flag;
+                }
             }
         }
         return($args);
     }
 
+    // set flags in IMAP server
+    function set_flags()
+    {
+        #rcube::write_log($this->name, print_r($_GET, true));
+
+        $imap = $this->rc->imap;
+        $mbox = rcube_utils::get_input_value('_mbox', rcube_utils::INPUT_GET);
+        $toggle_label = rcube_utils::get_input_value('_toggle_label', rcube_utils::INPUT_GET);
+        $flag_uids = rcube_utils::get_input_value('_flag_uids', rcube_utils::INPUT_GET);
+        $flag_uids = explode(',', $flag_uids);
+        $unflag_uids = rcube_utils::get_input_value('_unflag_uids', rcube_utils::INPUT_GET);
+        $unflag_uids = explode(',', $unflag_uids);
+
+        $imap->conn->flags = array_merge($imap->conn->flags, $this->get_user_labels());
+
+        #rcube::write_log($this->name, print_r($flag_uids, true));
+        #rcube::write_log($this->name, print_r($unflag_uids, true));
+
+        if (!is_array($unflag_uids)
+            || !is_array($flag_uids))
+            return false;
+
+        $imap->set_flag($flag_uids, $toggle_label, $mbox);
+        $imap->set_flag($unflag_uids, "UN$toggle_label", $mbox);
+
+        $this->api->output->send();
+    }
+
     function tb_label_popup()
     {
         $custom_labels = $this->get_user_labels();
-        rcube::write_log($this->name, print_r($custom_labels, true));
+        #rcube::write_log($this->name, print_r($custom_labels, true));
         $out = '<div id="tb_label_popup" class="popupmenu">
             <ul class="toolbarmenu">';
-        for ($i = 0; $i < 10; $i++)
+        foreach ($custom_labels as $key => $value)
         {
             // TODO escape
-            $out .= '<li data-label="'.$custom_labels[$i].'"><a href="#" class="active"><span class="checkmark-container"><span style="display: none" class="checkmark">&#10004;</span></span> '.$custom_labels[$i].'</a></li>';
+            $out .= '<li data-label="'.$key.'"><a href="#" class="active"><span class="checkmark-container"><span style="display: none" class="checkmark">&#10004;</span></span> '.$value.'</a></li>';
         }
         $out .= '</ul>
         </div>';

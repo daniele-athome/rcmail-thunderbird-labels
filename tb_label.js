@@ -155,6 +155,11 @@ function rcm_tb_label_get_selection()
     return selection;
 }
 
+function lowercase_all(list)
+{
+    return list.map(function(elem) { return elem.toLowerCase(); });
+}
+
 function rcm_tb_label_create_popupmenu()
 {
     $('#tb_label_popup li').each(function(i, e) {
@@ -173,7 +178,7 @@ function rcm_tb_label_create_popupmenu()
         var show_label = false;
         jQuery.each(selection, function(i, sel) {
             var message = rcmail.env.messages[sel];
-            var message_flags = message.flags.tb_labels.map(function(elem) { return elem.toLowerCase(); });
+            var message_flags = lowercase_all(message.flags.tb_labels);
             // show/hide checkmark
             var lbl = cur_e.attr('data-label').toLowerCase();
             if (message_flags.indexOf(lbl) >= 0) {
@@ -192,111 +197,84 @@ function rcm_tb_label_create_popupmenu()
 
 function rcm_tb_label_init_onclick()
 {
-    for (i = 0; i < 6; i++)
-    {
-      // find the "HTML a tags" of tb-label submenus
-        var cur_a = $('#tb_label_popup li.label' + i +' a');
+    $('#tb_label_popup li').each(function(i, e) {
+        // find the "HTML a tags" of tb-label submenus
+        var cur_a = $(e).find('a');
 
         // TODO check if click event is defined instead of unbinding?
         cur_a.unbind('click');
         cur_a.click(function() {
-                var toggle_label = $(this).parent().attr('class');
-                var toggle_label_no = parseInt(toggle_label.replace('label', ''));
-                var selection = rcm_tb_label_get_selection();
+            var selection = rcm_tb_label_get_selection();
+            if (!selection.length)
+                return;
 
-                if (!selection.length)
-                    return;
+            var toggle_label = $(this).parent().data('label');
 
-                var from = toggle_label_no;
-                var to = toggle_label_no + 1;
-                var unset_all = false;
-                // special case flag 0 means remove all flags
-                if (toggle_label_no == 0)
-                {
-                    from = 1;
-                    to = 6;
-                    unset_all = true;
-                }
-                for (i = from; i < to; i++)
-                {
-                    toggle_label = 'label' + i;
-                    toggle_label_no = i;
-                    // compile list of unflag and flag msgs and then send command
-                    // Thunderbird modifies multiple message flags like it did the first in the selection
-                    // e.g. first message has flag1, you click flag1, every message select loses flag1, the ones not having flag1 don't get it!
-                    var first_toggle_mode = 'on';
-                    if (rcmail.env.messages)
-                    {
-                        var first_message = rcmail.env.messages[selection[0]];
-                        if (first_message.flags
-                            && jQuery.inArray(toggle_label_no,
-                                    first_message.flags.tb_labels) >= 0
-                            )
-                            first_toggle_mode = 'off';
-                        else
-                            first_toggle_mode = 'on';
+            var toggle_mode = 'off';
+            if (rcmail.env.messages)
+            {
+                // policy is: flag all if at least one is not flagged, otherwise unflag all
+                jQuery.each(selection, function (idx, uid) {
+                    var message = rcmail.env.messages[uid];
+                    if (message.flags &&
+                        jQuery.inArray(toggle_label.toLowerCase(), lowercase_all(message.flags.tb_labels)) < 0) {
+                        console.log('found not flagged!');
+                        toggle_mode = 'on';
+                        return false;
                     }
-                    else // single message display
-                    {
-                        // flag already set?
-                        if (jQuery.inArray(toggle_label_no,
-                                    tb_labels_for_message) >= 0)
-                            first_toggle_mode = 'off';
-                    }
-                    var flag_uids = [];
-                    var unflag_uids = [];
-                    jQuery.each(selection, function (idx, uid) {
-                            // message list not available (example: in detailview)
-                            if (!rcmail.env.messages)
-                            {
-                                if (first_toggle_mode == 'on')
-                                    flag_uids.push(uid);
-                                else
-                                    unflag_uids.push(uid);
-                                // make sure for unset all there is the single message id
-                                if (unset_all && unflag_uids.length == 0)
-                                    unflag_uids.push(uid);
-                                return;
-                            }
-                            var message = rcmail.env.messages[uid];
-                            if (message.flags
-                                && jQuery.inArray(toggle_label_no,
-                                        message.flags.tb_labels) >= 0
-                                )
-                            {
-                                if (first_toggle_mode == 'off')
-                                    unflag_uids.push(uid);
-                            }
-                            else
-                            {
-                                if (first_toggle_mode == 'on')
-                                    flag_uids.push(uid);
-                            }
-                    });
+                });
+            }
+            else // single message display
+            {
+                // TODO tb_labels_for_message
+                // flag already set?
+                if (jQuery.inArray(toggle_label,
+                        tb_labels_for_message) < 0)
+                    toggle_mode = 'on';
+            }
 
-                    if (unset_all)
-                        flag_uids = [];
-
-                    // skip sending flags to backend that are not set anywhere
-                    if (flag_uids.length == 0
-                        && unflag_uids.length == 0)
-                            continue;
-
-                    var str_flag_uids = flag_uids.join(',');
-                    var str_unflag_uids = unflag_uids.join(',');
-
-                    var lock = rcmail.set_busy(true, 'loading');
-                    // call PHP set_flags to set the flags in IMAP server
-                    console.log(str_flag_uids);
-                    console.log(str_unflag_uids);
-                    //rcmail.http_request('plugin.labels.set_flags', '_flag_uids=' + str_flag_uids + '&_unflag_uids=' + str_unflag_uids + '&_mbox=' + urlencode(rcmail.env.mailbox) + "&_toggle_label=" + toggle_label, lock);
-
-                    // remove/add classes and tb labels from messages in JS
-                    rcm_tb_label_flag_msgs(flag_uids, toggle_label_no);
-                    rcm_tb_label_unflag_msgs(unflag_uids, toggle_label_no);
+            var flag_uids = [];
+            var unflag_uids = [];
+            jQuery.each(selection, function (idx, uid) {
+                // message list not available (example: in detailview)
+                if (!rcmail.env.messages)
+                {
+                    if (toggle_mode == 'on')
+                        flag_uids.push(uid);
+                    else
+                        unflag_uids.push(uid);
                 }
+                // in message list
+                else {
+                    var message = rcmail.env.messages[uid];
+                    if (message.flags
+                        && jQuery.inArray(toggle_label.toLowerCase(),
+                            lowercase_all(message.flags.tb_labels)) >= 0
+                    ) {
+                        if (toggle_mode == 'off')
+                            unflag_uids.push(uid);
+                    }
+                    else {
+                        if (toggle_mode == 'on')
+                            flag_uids.push(uid);
+                    }
+                }
+            });
+
+            var str_flag_uids = flag_uids.join(',');
+            var str_unflag_uids = unflag_uids.join(',');
+
+            var lock = rcmail.set_busy(true, 'loading');
+            // call PHP set_flags to set the flags in IMAP server
+            console.log('flag: ' + str_flag_uids);
+            console.log('unflag: ' + str_unflag_uids);
+            rcmail.http_request('plugin.labels.set_flags', '_flag_uids=' + str_flag_uids + '&_unflag_uids=' + str_unflag_uids + '&_mbox=' + urlencode(rcmail.env.mailbox) + "&_toggle_label=" + toggle_label, lock);
+
+            // remove/add classes and tb labels from messages in JS
+            // TODO rcm_tb_label_flag_msgs(flag_uids, toggle_label_no);
+            // TODO rcm_tb_label_unflag_msgs(unflag_uids, toggle_label_no);
         });
-    }
+    });
 }
 
 $(document).ready(function() {

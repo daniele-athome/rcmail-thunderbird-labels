@@ -172,15 +172,13 @@ function rcm_tb_label_create_popupmenu()
         // if at least one message has the label, we got it
         var show_label = false;
         jQuery.each(selection, function(i, sel) {
-            // show/hide checkmark
             var message = rcmail.env.messages[sel];
-            // we can expect message.flags.tb_labels to be all uppercase
-            if (message.flags && message.flags.tb_labels) {
-                var lbl = cur_e.attr('data-label').toUpperCase();
-                if (message.flags.tb_labels.indexOf(lbl) >= 0) {
-                    show_label = true;
-                    return false;
-                }
+            var message_flags = message.flags.tb_labels.map(function(elem) { return elem.toLowerCase(); });
+            // show/hide checkmark
+            var lbl = cur_e.attr('data-label').toLowerCase();
+            if (message_flags.indexOf(lbl) >= 0) {
+                show_label = true;
+                return false;
             }
         });
 

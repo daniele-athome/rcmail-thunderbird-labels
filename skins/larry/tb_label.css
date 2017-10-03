@@ -172,7 +172,7 @@ position:relative;
 /* hack for firefox : doesnt display the bullets at the correct height */
 @-moz-document url-prefix() {
   span.tb_label_dots {
-    top: -16px;
+    top: -18px;
   }
 }
 
@@ -181,9 +181,10 @@ span.tb_label_dots span {
   margin-left: 4px;
   padding: 1px 5px;
   display: inline-block;
-  background-color: #FF2200;
+  background-color: #666d71;
   color: white;
   text-align: center;
+  font-size: 10px;
 }
 
 

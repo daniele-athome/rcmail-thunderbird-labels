@@ -12,7 +12,8 @@ class labels extends rcube_plugin
 {
     public $task = 'mail|settings';
     private $rc;
-    private $map;
+    private $name;
+    private $_permflags;
 
     function init()
     {
@@ -159,7 +160,7 @@ class labels extends rcube_plugin
     private function get_user_labels()
     {
         $exclude = $this->rc->config->get('tb_label_exclude');
-        $server_flags = $this->rc->imap->get_permflags('INBOX');
+        $server_flags = $this->get_permflags();
         $custom_labels = $this->rc->config->get('tb_label_custom_labels');
         $labels = [];
 
@@ -179,6 +180,13 @@ class labels extends rcube_plugin
         return $labels;
     }
 
+    private function get_permflags()
+    {
+        if (!$this->_permflags)
+            $this->_permflags = $this->rc->imap->get_permflags('INBOX');
+        return $this->_permflags;
+    }
+
     /**
      * Returns true if the given label is a user label (i.e. not a flag).
      */
@@ -190,10 +198,8 @@ class labels extends rcube_plugin
             return false;
 
         // check with server permanent flags
-        $server_flags = $this->rc->imap->get_permflags('INBOX');
-        $ret = false;
+        $server_flags = $this->get_permflags();
 
-        // WIP
         foreach ($server_flags as $flag) {
             $flagtype = substr($flag, 0, 1);
             $nflag = strtoupper(($flagtype == '\\' || $flagtype == '$') ?
@@ -203,8 +209,8 @@ class labels extends rcube_plugin
             if ($flagtype == '\\' && !strcasecmp($label, $nflag)) {
                 return false;
             }
-
-            elseif ($flagtype == '$' && $this->in_array_caseins($nflag, $exclude)) {
+            // excluded flag
+            elseif ($flagtype == '$' && $this->in_array_caseins('$'.$label, $exclude)) {
                 return false;
             }
         }
@@ -230,7 +236,7 @@ class labels extends rcube_plugin
             foreach ($message->flags as $flagname => $flagvalue)
             {
                 if ($this->is_user_label($flagname))
-                    $message->list_flags['extra_flags']['tb_labels'][] = $flagname;
+                    $message->list_flags['extra_flags']['tb_labels'][] = ucfirst(strtolower($flagname));
             }
         }
         return($args);

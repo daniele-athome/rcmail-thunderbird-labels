@@ -153,6 +153,9 @@ class labels extends rcube_plugin
         return !empty(preg_grep('/^'.preg_quote($needle).'$/i', $haystack));
     }
 
+    /**
+     * Builds an array of all labels selectable by the user.
+     */
     private function get_user_labels()
     {
         $exclude = $this->rc->config->get('tb_label_exclude');
@@ -167,8 +170,8 @@ class labels extends rcube_plugin
             }
         }
 
-        foreach ($custom_labels as $i => $label) {
-            if ($i > 0 && !empty($label) && !$this->in_array_caseins($label, $labels)) {
+        foreach ($custom_labels as $label) {
+            if (!empty($label) && !$this->in_array_caseins($label, $labels)) {
                 $labels[] = $label;
             }
         }

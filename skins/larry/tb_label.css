@@ -27,6 +27,15 @@
   color: inherit; /* fix for firefox */
 }
 
+#tb_label_popup a .checkmark-container {
+    width: 12px;
+    display: inline-block;
+}
+
+#tb_label_popup a .checkmark {
+    vertical-align: top;
+}
+
 .toolbarmenu li.label0,
 .toolbarmenu li.label0 a.active
 {
@@ -163,14 +172,18 @@ position:relative;
 /* hack for firefox : doesnt display the bullets at the correct height */
 @-moz-document url-prefix() {
   span.tb_label_dots {
-    top: -19px;
+    top: -16px;
   }
 }
 
 span.tb_label_dots span {
-  font-size: 32px;
   vertical-align: middle;
-  line-height: 0px;
+  margin-left: 4px;
+  padding: 1px 5px;
+  display: inline-block;
+  background-color: #FF2200;
+  color: white;
+  text-align: center;
 }
 
 
@@ -185,12 +198,16 @@ div#labelbox {
 div#labelbox span {
     margin: 0 3px;
     padding: 3px;
-    border: 1px solid black;
     border-radius: 3px;
-    color: #black;
+    color: black;
     font-weight: bold;
 }
-  
+
+div#labelbox span.tb_label_span {
+  background-color: #FF2200;
+  color: white;
+}
+
 div#labelbox span.tb_label_span1 {
   background-color: #FF2200;
 }
@@ -209,10 +226,10 @@ div#labelbox span.tb_label_span4 {
 
 div#labelbox span.tb_label_span5 {
   background-color: #FF33FF;
-}  
+}
 
 /* icon for settings-section */
-#sections-table tbody #rcmrowthunderbird_labels td.section {
+#sections-table tbody #rcmrowlabels td.section {
 	background-image: url(thunderbird_24.png);
 	background-position: 3px 3px;
 }

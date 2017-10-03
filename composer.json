@@ -1,5 +1,5 @@
 {
-    "name": "daniele-athome/roundcube_labels",
+    "name": "daniele-athome/labels",
     "type": "roundcube-plugin",
     "keywords": ["mail","labels","tags"],
     "license": "BSD-2-Clause",

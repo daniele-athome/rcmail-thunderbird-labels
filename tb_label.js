@@ -15,7 +15,7 @@ function rcmail_tb_label_menu(p)
 		rcmail_ui = UI;
 	if (!rcmail_ui.check_tb_popup())
 		rcmail_ui.tb_label_popup_add();
-	
+
 	// Show the popup menu with tags
 	// -- skin larry vs classic
 	if (typeof rcmail_ui.show_popupmenu == "undefined")
@@ -39,7 +39,7 @@ function rcm_tb_label_insert(uid, row)
 	var rowobj = $(row.obj);
 	// add span container for little colored bullets
 	rowobj.find("td.subject").append("<span class='tb_label_dots'></span>");
-	
+
 	if (message.flags && message.flags.tb_labels) {
 	  if (message.flags.tb_labels.length) {
   	  var spanobj = rowobj.find("td.subject span.tb_label_dots");
@@ -47,7 +47,8 @@ function rcm_tb_label_insert(uid, row)
   	  if (rcmail.env.tb_label_style=='bullets') {
   	    // bullets UI style
         for (idx in message.flags.tb_labels) {
-          spanobj.append("<span class='label"+message.flags.tb_labels[idx]+"'>&#8226;</span>");
+          // TODO escape
+          spanobj.append("<span class='label'>"+message.flags.tb_labels[idx]+"</span>");
         }
       } else {
         // thunderbird UI style
@@ -68,7 +69,7 @@ function rcm_tb_label_submenu(p)
 		rcmail_ui = UI;
 	// setup onclick and active/non active classes
 	rcm_tb_label_create_popupmenu();
-	
+
 	// -- create sensible popup, using roundcubes internals
 	if (!rcmail_ui.check_tb_popup())
 		rcmail_ui.tb_label_popup_add();
@@ -80,7 +81,7 @@ function rcm_tb_label_submenu(p)
 	return false;
 }
 
-function rcm_tb_label_flag_toggle(flag_uids, toggle_label_no, onoff)
+function rcm_tb_label_flag_toggle(flag_uids, toggle_label, onoff)
 {
 	var headers_table = $('table.headers-table');
 	var preview_frame = $('#messagecontframe');
@@ -90,7 +91,7 @@ function rcm_tb_label_flag_toggle(flag_uids, toggle_label_no, onoff)
 		tb_labels_for_message = preview_frame.get(0).contentWindow.tb_labels_for_message;
 		headers_table = preview_frame.contents().find('table.headers-table');
 	}
-	
+
 	if (!rcmail.message_list
 		&& !headers_table)
 		return;
@@ -98,24 +99,25 @@ function rcm_tb_label_flag_toggle(flag_uids, toggle_label_no, onoff)
 	if (headers_table.length && flag_uids.length) {
 		if (onoff == true) {
 		  if (rcmail.env.tb_label_style=='bullets') {
-		    $('#labelbox').append("<span class='tb_label_span"+toggle_label_no+"'>" +
-			    rcmail.env.tb_label_custom_labels[toggle_label_no] + "</span>");
+		    $('#labelbox').append("<span class='tb_label_span tb_label_span"+toggle_label+"'>" +
+                // TODO escape
+			    toggle_label + "</span>");
 		  } else {
-		    headers_table.addClass('label'+toggle_label_no);
+		    headers_table.addClass('label'+toggle_label);
 		  }
 			// add to flag list
-			tb_labels_for_message.push(toggle_label_no);
-			
+			tb_labels_for_message.push(toggle_label);
+
 		}
 		else
 		{
 			if (rcmail.env.tb_label_style=='bullets') {
-			  $("span.tb_label_span"+toggle_label_no).remove();
+			  $("span.tb_label_span"+toggle_label).remove();
 			} else {
-			  headers_table.removeClass('label'+toggle_label_no);
+			  headers_table.removeClass('label'+toggle_label);
 			}
-			
-			var pos = jQuery.inArray(toggle_label_no, tb_labels_for_message);
+
+			var pos = jQuery.inArray(toggle_label, tb_labels_for_message);
 			if (pos > -1) {
 				tb_labels_for_message.splice(pos, 1);
 			}
@@ -134,40 +136,41 @@ function rcm_tb_label_flag_toggle(flag_uids, toggle_label_no, onoff)
 				var rowobj = $(row.obj);
 				var spanobj = rowobj.find("td.subject span.tb_label_dots");
 				if (rcmail.env.tb_label_style=='bullets') {
-				  spanobj.append("<span class='label"+toggle_label_no+"'>&#8226;</span>");
+                  // TODO escape
+				  spanobj.append("<span class='label"+toggle_label+"'>"+toggle_label+"</span>");
 				} else {
-				  rowobj.addClass('label'+toggle_label_no);
+				  rowobj.addClass('label'+toggle_label);
 				}
-				
+
 				// add to flag list
-				message.flags.tb_labels.push(toggle_label_no);
+				message.flags.tb_labels.push(toggle_label);
 			}
 			else
 			{
 				// remove colors
 				var rowobj = $(row.obj);
 				if (rcmail.env.tb_label_style=='bullets') {
-				  rowobj.find("td.subject span.tb_label_dots span.label"+toggle_label_no).remove();
+				  rowobj.find("td.subject span.tb_label_dots span.label"+toggle_label).remove();
 				} else {
-				  rowobj.removeClass('label'+toggle_label_no);
+				  rowobj.removeClass('label'+toggle_label);
 				}
-				
+
 				// remove from flag list
-				var pos = jQuery.inArray(toggle_label_no, message.flags.tb_labels);
+				var pos = jQuery.inArray(toggle_label, message.flags.tb_labels);
 				if (pos > -1)
 					message.flags.tb_labels.splice(pos, 1);
 			}
 	});
 }
 
-function rcm_tb_label_flag_msgs(flag_uids, toggle_label_no)
+function rcm_tb_label_flag_msgs(flag_uids, toggle_label)
 {
-	rcm_tb_label_flag_toggle(flag_uids, toggle_label_no, true);
+	rcm_tb_label_flag_toggle(flag_uids, toggle_label, true);
 }
 
-function rcm_tb_label_unflag_msgs(unflag_uids, toggle_label_no)
+function rcm_tb_label_unflag_msgs(unflag_uids, toggle_label)
 {
-	rcm_tb_label_flag_toggle(unflag_uids, toggle_label_no, false);
+	rcm_tb_label_flag_toggle(unflag_uids, toggle_label, false);
 }
 
 // helper function to get selected/active messages
@@ -184,10 +187,10 @@ function rcm_tb_label_create_popupmenu()
 	for (i = 0; i < 6; i++)
 	{
 		var cur_a = $('li.label' + i +' a');
-		
+
 		// add/remove active class
 		var selection = rcm_tb_label_get_selection();
-		
+
 		if (selection.length == 0)
 			cur_a.removeClass('active');
 		else
@@ -201,17 +204,17 @@ function rcm_tb_label_init_onclick()
 	{
 	  // find the "HTML a tags" of tb-label submenus
 		var cur_a = $('#tb_label_popup li.label' + i +' a');
-	
+
 		// TODO check if click event is defined instead of unbinding?
 		cur_a.unbind('click');
 		cur_a.click(function() {
 				var toggle_label = $(this).parent().attr('class');
 				var toggle_label_no = parseInt(toggle_label.replace('label', ''));
 				var selection = rcm_tb_label_get_selection();
-				
+
 				if (!selection.length)
 					return;
-				
+
 				var from = toggle_label_no;
 				var to = toggle_label_no + 1;
 				var unset_all = false;
@@ -278,22 +281,24 @@ function rcm_tb_label_init_onclick()
 									flag_uids.push(uid);
 							}
 					});
-					
+
 					if (unset_all)
 						flag_uids = [];
-					
+
 					// skip sending flags to backend that are not set anywhere
 					if (flag_uids.length == 0
 						&& unflag_uids.length == 0)
 							continue;
-					
+
 					var str_flag_uids = flag_uids.join(',');
 					var str_unflag_uids = unflag_uids.join(',');
-					
+
 					var lock = rcmail.set_busy(true, 'loading');
 					// call PHP set_flags to set the flags in IMAP server
-					rcmail.http_request('plugin.thunderbird_labels.set_flags', '_flag_uids=' + str_flag_uids + '&_unflag_uids=' + str_unflag_uids + '&_mbox=' + urlencode(rcmail.env.mailbox) + "&_toggle_label=" + toggle_label, lock);
-					
+                    console.log(str_flag_uids);
+                    console.log(str_unflag_uids);
+					//rcmail.http_request('plugin.labels.set_flags', '_flag_uids=' + str_flag_uids + '&_unflag_uids=' + str_unflag_uids + '&_mbox=' + urlencode(rcmail.env.mailbox) + "&_toggle_label=" + toggle_label, lock);
+
 					// remove/add classes and tb labels from messages in JS
 					rcm_tb_label_flag_msgs(flag_uids, toggle_label_no);
 					rcm_tb_label_unflag_msgs(unflag_uids, toggle_label_no);
@@ -307,18 +312,18 @@ function rcmail_ctxm_label(command, el, pos)
 	// my code works only on selected rows, contextmenu also on unselected
 	// so if no selection is available, use the uid set by contextmenu plugin
 	var selection = rcmail.message_list ? rcmail.message_list.get_selection() : [];
-	
+
 	if (!selection.length && !rcmail.env.uid)
 		return;
 	if (!selection.length && rcmail.env.uid)
 		rcmail.message_list.select_row(rcmail.env.uid);
-	
+
 	var cur_a = $('#tb_label_popup li.label' + rcmail.tb_label_no +' a');
 	if (cur_a)
 	{
 		cur_a.click();
 	}
-	
+
 	return;
 }
 
@@ -340,7 +345,7 @@ $(document).ready(function() {
       {
         var label_no = k % 48;
         var cur_a = $('#tb_label_popup li.label' + label_no + ' a');
-      
+
         if (cur_a)
         {
           cur_a.click();
@@ -348,12 +353,12 @@ $(document).ready(function() {
       }
     });
   }
-	
+
 	// if exists add contextmenu entries
 	if (window.rcm_contextmenu_register_command) {
 		rcm_contextmenu_register_command('ctxm_tb_label', rcmail_ctxm_label, $('#tb_label_ctxm_mainmenu'), 'moreacts', 'after', true);
 	}
-	
+
 	// single message displayed?
 	if (window.tb_labels_for_message)
 	{
@@ -369,34 +374,34 @@ $(document).ready(function() {
 			}
 		);
 	}
-	
+
 	// add roundcube events
 	rcmail.addEventListener('insertrow', function(event) { rcm_tb_label_insert(event.uid, event.row); });
-	
+
 	rcmail.addEventListener('init', function(evt) {
 		// create custom button, JS method, broken layout in Firefox 9 using PHP method now
-		/*var button = $('<A>').attr('href', '#').attr('id', 'tb_label_popuplink').attr('title', rcmail.gettext('label', 'thunderbird_labels')).html('');
-		
+		/*var button = $('<A>').attr('href', '#').attr('id', 'tb_label_popuplink').attr('title', rcmail.gettext('label', 'labels')).html('');
+
 		button.bind('click', function(e) {
-			rcmail.command('plugin.thunderbird_labels.rcm_tb_label_submenu', this);
+			rcmail.command('plugin.labels.rcm_tb_label_submenu', this);
 			return false;
 		});
-		
+
 		// add and register
 		rcmail.add_element(button, 'toolbar');
-		rcmail.register_button('plugin.thunderbird_labels.rcm_tb_label_submenu', 'tb_label_popuplink', 'link');
+		rcmail.register_button('plugin.labels.rcm_tb_label_submenu', 'tb_label_popuplink', 'link');
 		*/
-		//rcmail.register_command('plugin.thunderbird_labels.rcm_tb_label_submenu', rcm_tb_label_submenu, true);
-		rcmail.register_command('plugin.thunderbird_labels.rcm_tb_label_submenu', rcm_tb_label_submenu, rcmail.env.uid);
+		//rcmail.register_command('plugin.labels.rcm_tb_label_submenu', rcm_tb_label_submenu, true);
+		rcmail.register_command('plugin.labels.rcm_tb_label_submenu', rcm_tb_label_submenu, rcmail.env.uid);
 
-		// add event-listener to message list		
+		// add event-listener to message list
 		if (rcmail.message_list) {
 		    rcmail.message_list.addEventListener('select', function(list){
-			    rcmail.enable_command('plugin.thunderbird_labels.rcm_tb_label_submenu', list.get_selection().length > 0);
+			    rcmail.enable_command('plugin.labels.rcm_tb_label_submenu', list.get_selection().length > 0);
 			});
 		}
 	});
-	
+
 	// -- add my submenu to roundcubes UI (for roundcube classic only?)
 	if (window.rcube_mail_ui)
 	rcube_mail_ui.prototype.tb_label_popup_add = function() {
@@ -410,7 +415,7 @@ $(document).ready(function() {
 		else
 			delete this.popups.tb_label_popup;
 	};
-	
+
 	if (window.rcube_mail_ui)
 	rcube_mail_ui.prototype.check_tb_popup = function() {
 		// larry skin doesn't have that variable, popup works automagically, return true
@@ -421,6 +426,6 @@ $(document).ready(function() {
 		else
 			return false;
 	};
-	
+
 });
 

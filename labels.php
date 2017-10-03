@@ -29,7 +29,7 @@ class labels extends rcube_plugin
                 return;
 
             $this->include_script('tb_label.js');
-            #$this->add_hook('messages_list', array($this, 'read_flags'));
+            $this->add_hook('messages_list', array($this, 'read_flags'));
             #$this->add_hook('message_load', array($this, 'read_single_flags'));
             #$this->add_hook('template_object_messageheaders', array($this, 'color_headers'));
             $this->add_hook('render_page', array($this, 'tb_label_popup'));
@@ -164,7 +164,7 @@ class labels extends rcube_plugin
         $labels = [];
 
         foreach ($server_flags as $flag) {
-            if (!(in_array('\\*', $exclude) && substr($flag, 0, 1) == '\\') &&
+            if (substr($flag, 0, 1) != '\\' &&
                 !$this->in_array_caseins($flag, $exclude)) {
                 $labels[] = $flag;
             }
@@ -177,6 +177,63 @@ class labels extends rcube_plugin
         }
 
         return $labels;
+    }
+
+    /**
+     * Returns true if the given label is a user label (i.e. not a flag).
+     */
+    private function is_user_label($label)
+    {
+        $exclude = $this->rc->config->get('tb_label_exclude');
+        // consider exclusion and exit immediately
+        if ($this->in_array_caseins($label, $exclude))
+            return false;
+
+        // check with server permanent flags
+        $server_flags = $this->rc->imap->get_permflags('INBOX');
+        $ret = false;
+
+        // WIP
+        foreach ($server_flags as $flag) {
+            $flagtype = substr($flag, 0, 1);
+            $nflag = strtoupper(($flagtype == '\\' || $flagtype == '$') ?
+                substr($flag, 1) : $flag);
+
+            // system flag
+            if ($flagtype == '\\' && !strcasecmp($label, $nflag)) {
+                return false;
+            }
+
+            elseif ($flagtype == '$' && $this->in_array_caseins($nflag, $exclude)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public function read_flags($args)
+    {
+        #rcube::write_log($this->name, print_r($args, true));
+        // add color information for all messages
+        // dont loop over all messages if we dont have any highlights or no msgs
+        if (!isset($args['messages']) or !is_array($args['messages'])) {
+                return $args;
+        }
+
+        // loop over all messages and add $LabelX info to the extra_flags
+        foreach($args['messages'] as $message)
+        {
+            #rcube::write_log($this->name, print_r($message->flags, true));
+            $message->list_flags['extra_flags']['tb_labels'] = []; # always set extra_flags, needed for javascript later!
+            if (is_array($message->flags))
+            foreach ($message->flags as $flagname => $flagvalue)
+            {
+                if ($this->is_user_label($flagname))
+                    $message->list_flags['extra_flags']['tb_labels'][] = $flagname;
+            }
+        }
+        return($args);
     }
 
     function tb_label_popup()

@@ -1,7 +1,6 @@
 <?php
-// excluded labels
+// excluded labels (case-insensitive)
 $rcmail_config['tb_label_exclude'] = [
-    '\*',
     '$MDNSent',
     'NonJunk',
 ];

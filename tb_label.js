@@ -71,26 +71,20 @@ function rcm_tb_label_flag_toggle(flag_uids, toggle_label, onoff)
     // for single message view
     if (headers_table.length && flag_uids.length) {
         if (onoff == true) {
-          if (rcmail.env.tb_label_style=='bullets') {
             $('#labelbox').append("<span class='tb_label_span tb_label_span"+toggle_label+"'>" +
                 // TODO escape
                 toggle_label + "</span>");
-          } else {
-            headers_table.addClass('label'+toggle_label);
-          }
             // add to flag list
-            tb_labels_for_message.push(toggle_label);
-
+            var pos = jQuery.inArray(toggle_label.toLowerCase(), lowercase_all(tb_labels_for_message));
+            if (pos < 0) {
+                tb_labels_for_message.push(toggle_label);
+            }
         }
         else
         {
-            if (rcmail.env.tb_label_style=='bullets') {
-              $("span.tb_label_span"+toggle_label).remove();
-            } else {
-              headers_table.removeClass('label'+toggle_label);
-            }
+            $("span.tb_label_span"+toggle_label).remove();
 
-            var pos = jQuery.inArray(toggle_label, tb_labels_for_message);
+            var pos = jQuery.inArray(toggle_label.toLowerCase(), lowercase_all(tb_labels_for_message));
             if (pos > -1) {
                 tb_labels_for_message.splice(pos, 1);
             }
@@ -108,12 +102,8 @@ function rcm_tb_label_flag_toggle(flag_uids, toggle_label, onoff)
                 // add colors
                 var rowobj = $(row.obj);
                 var spanobj = rowobj.find("td.subject span.tb_label_dots");
-                if (rcmail.env.tb_label_style=='bullets') {
-                  // TODO escape
-                  spanobj.append("<span class='label"+toggle_label+"'>"+toggle_label+"</span>");
-                } else {
-                  rowobj.addClass('label'+toggle_label);
-                }
+                // TODO escape
+                spanobj.append("<span class='label"+toggle_label+"'>"+toggle_label+"</span>");
 
                 // add to flag list
                 message.flags.tb_labels.push(toggle_label);
@@ -122,14 +112,10 @@ function rcm_tb_label_flag_toggle(flag_uids, toggle_label, onoff)
             {
                 // remove colors
                 var rowobj = $(row.obj);
-                if (rcmail.env.tb_label_style=='bullets') {
-                  rowobj.find("td.subject span.tb_label_dots span.label"+toggle_label).remove();
-                } else {
-                  rowobj.removeClass('label'+toggle_label);
-                }
+                rowobj.find("td.subject span.tb_label_dots span.label"+toggle_label).remove();
 
                 // remove from flag list
-                var pos = jQuery.inArray(toggle_label, message.flags.tb_labels);
+                var pos = jQuery.inArray(toggle_label.toLowerCase(), lowercase_all(message.flags.tb_labels));
                 if (pos > -1)
                     message.flags.tb_labels.splice(pos, 1);
             }
@@ -177,10 +163,18 @@ function rcm_tb_label_create_popupmenu()
         // if at least one message has the label, we got it
         var show_label = false;
         jQuery.each(selection, function(i, sel) {
-            var message = rcmail.env.messages[sel];
-            var message_flags = lowercase_all(message.flags.tb_labels);
+            var message_flags;
+            if (rcmail.env.messages) {
+                var message = rcmail.env.messages[sel];
+                message_flags = message.flags.tb_labels;
+            }
+            else {
+                message_flags = tb_labels_for_message;
+            }
+
+            message_flags = lowercase_all(message_flags);
             // show/hide checkmark
-            var lbl = cur_e.attr('data-label').toLowerCase();
+            var lbl = cur_e.data('label').toLowerCase();
             if (message_flags.indexOf(lbl) >= 0) {
                 show_label = true;
                 return false;
@@ -188,10 +182,12 @@ function rcm_tb_label_create_popupmenu()
         });
 
         // now apply the checkmarks for real
-        if (show_label)
+        if (show_label) {
             cur_e.find('.checkmark').show();
-        else
+        }
+        else {
             cur_e.find('.checkmark').hide();
+        }
     });
 }
 
@@ -208,7 +204,8 @@ function rcm_tb_label_init_onclick()
             if (!selection.length)
                 return;
 
-            var toggle_label = $(this).parent().data('label');
+            var label_obj = $(this).parent();
+            var toggle_label = label_obj.data('label');
 
             var toggle_mode = 'off';
             if (rcmail.env.messages)
@@ -218,7 +215,6 @@ function rcm_tb_label_init_onclick()
                     var message = rcmail.env.messages[uid];
                     if (message.flags &&
                         jQuery.inArray(toggle_label.toLowerCase(), lowercase_all(message.flags.tb_labels)) < 0) {
-                        console.log('found not flagged!');
                         toggle_mode = 'on';
                         return false;
                     }
@@ -226,10 +222,9 @@ function rcm_tb_label_init_onclick()
             }
             else // single message display
             {
-                // TODO tb_labels_for_message
                 // flag already set?
-                if (jQuery.inArray(toggle_label,
-                        tb_labels_for_message) < 0)
+                if (jQuery.inArray(toggle_label.toLowerCase(),
+                        lowercase_all(tb_labels_for_message)) < 0)
                     toggle_mode = 'on';
             }
 
@@ -266,13 +261,12 @@ function rcm_tb_label_init_onclick()
 
             var lock = rcmail.set_busy(true, 'loading');
             // call PHP set_flags to set the flags in IMAP server
-            console.log('flag: ' + str_flag_uids);
-            console.log('unflag: ' + str_unflag_uids);
             rcmail.http_request('plugin.labels.set_flags', '_flag_uids=' + str_flag_uids + '&_unflag_uids=' + str_unflag_uids + '&_mbox=' + urlencode(rcmail.env.mailbox) + "&_toggle_label=" + toggle_label, lock);
 
             // remove/add classes and tb labels from messages in JS
-            // TODO rcm_tb_label_flag_msgs(flag_uids, toggle_label_no);
-            // TODO rcm_tb_label_unflag_msgs(unflag_uids, toggle_label_no);
+            var label_text = label_obj.find('.label-text').text();
+            rcm_tb_label_flag_msgs(flag_uids, label_text);
+            rcm_tb_label_unflag_msgs(unflag_uids, label_text);
         });
     });
 }
@@ -291,7 +285,7 @@ $(document).ready(function() {
       tb_labels_for_message.sort(function(a,b) {return a-b;});
         jQuery.each(tb_labels_for_message, function(idx, val)
             {
-                rcm_tb_label_flag_msgs([-1,], val);
+                rcm_tb_label_flag_msgs([-1], val);
             }
         );
     }

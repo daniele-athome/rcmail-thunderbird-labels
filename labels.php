@@ -13,6 +13,7 @@ class labels extends rcube_plugin
     public $task = 'mail|settings';
     private $rc;
     private $name;
+    private $message_tb_labels;
     private $_permflags;
 
     function init()
@@ -31,8 +32,8 @@ class labels extends rcube_plugin
 
             $this->include_script('tb_label.js');
             $this->add_hook('messages_list', array($this, 'read_flags'));
-            #$this->add_hook('message_load', array($this, 'read_single_flags'));
-            #$this->add_hook('template_object_messageheaders', array($this, 'color_headers'));
+            $this->add_hook('message_load', array($this, 'read_single_flags'));
+            $this->add_hook('template_object_messageheaders', array($this, 'color_headers'));
             $this->add_hook('render_page', array($this, 'tb_label_popup'));
             $this->include_stylesheet($this->local_skin_path() . '/tb_label.css');
 
@@ -78,8 +79,6 @@ class labels extends rcube_plugin
                 4 => $this->getText('label4'),
             ));
         }
-        // TODO pass label strings to JS
-        //$this->rc->output->set_env('tb_label_custom_labels', $this->rc->config->get('tb_label_custom_labels'));
     }
 
     // create a section for the labels Settings
@@ -220,6 +219,44 @@ class labels extends rcube_plugin
         return true;
     }
 
+    public function color_headers($p)
+    {
+        #rcube::write_log($this->name, print_r($p, true));
+        # -- always write array, even when empty
+        $p['content'] .= '<script type="text/javascript">
+		var tb_labels_for_message = ['.join(',', array_map(function($x) { return "'".$x."'"; }, $this->message_tb_labels)).'];
+		</script>';
+        return $p;
+    }
+
+    public function read_single_flags($args)
+    {
+        #rcube::write_log($this->name, print_r(($args['object']), true));
+        if (!isset($args['object'])) {
+            return;
+        }
+
+        if (is_array($args['object']->headers->flags))
+        {
+            $this->message_tb_labels = array();
+            foreach ($args['object']->headers->flags as $flagname => $flagvalue)
+            {
+                if ($this->is_user_label($flagname)) {
+                    if (isset($this->rc->imap->conn->flags[strtoupper($flagname)])) {
+                        $flag = $this->rc->imap->conn->flags[strtoupper($flagname)];
+                    }
+                    else {
+                        $flag = ucfirst(strtolower($flagname));
+                    }
+                    $this->message_tb_labels[] = $flag;
+                }
+            }
+        }
+
+        #rcube::write_log($this->name, print_r($this->message_tb_labels, true));
+        # -- no return value for this hook
+    }
+
     public function read_flags($args)
     {
         #rcube::write_log($this->name, print_r($args, true));
@@ -289,7 +326,7 @@ class labels extends rcube_plugin
         foreach ($custom_labels as $key => $value)
         {
             // TODO escape
-            $out .= '<li data-label="'.$key.'"><a href="#" class="active"><span class="checkmark-container"><span style="display: none" class="checkmark">&#10004;</span></span> '.$value.'</a></li>';
+            $out .= '<li data-label="'.$key.'"><a href="#" class="active"><span class="checkmark-container"><span style="display: none" class="checkmark">&#10004;</span></span> <span class="label-text">'.$value.'</span></a></li>';
         }
         $out .= '</ul>
         </div>';

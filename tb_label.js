@@ -24,9 +24,10 @@ function rcm_tb_label_insert(uid, row)
       if (message.flags.tb_labels.length) {
         var spanobj = rowobj.find("td.subject span.tb_label_dots");
         message.flags.tb_labels.sort(function(a,b) {return a-b;});
-        for (idx in message.flags.tb_labels) {
-          // TODO escape
-          spanobj.append("<span class='label'>"+message.flags.tb_labels[idx]+"</span>");
+        for (var idx in message.flags.tb_labels) {
+          var label_span = $("<span class='label'></span>");
+          label_span.text(message.flags.tb_labels[idx]);
+          spanobj.append(label_span);
         }
       }
     }
@@ -71,9 +72,11 @@ function rcm_tb_label_flag_toggle(flag_uids, toggle_label, onoff)
     // for single message view
     if (headers_table.length && flag_uids.length) {
         if (onoff == true) {
-            $('#labelbox').append("<span class='tb_label_span tb_label_span"+toggle_label+"'>" +
-                // TODO escape
-                toggle_label + "</span>");
+            var label_span = $("<span class='tb_label_span'></span>");
+            label_span.addClass("tb_label_span"+toggle_label);
+            label_span.text(toggle_label);
+
+            $('#labelbox').append(label_span);
             // add to flag list
             var pos = jQuery.inArray(toggle_label.toLowerCase(), lowercase_all(tb_labels_for_message));
             if (pos < 0) {
@@ -102,8 +105,10 @@ function rcm_tb_label_flag_toggle(flag_uids, toggle_label, onoff)
                 // add colors
                 var rowobj = $(row.obj);
                 var spanobj = rowobj.find("td.subject span.tb_label_dots");
-                // TODO escape
-                spanobj.append("<span class='label"+toggle_label+"'>"+toggle_label+"</span>");
+                var label_span = $("<span></span>");
+                label_span.addClass("label"+toggle_label);
+                label_span.text(toggle_label);
+                spanobj.append(label_span);
 
                 // add to flag list
                 message.flags.tb_labels.push(toggle_label);

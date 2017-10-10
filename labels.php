@@ -326,8 +326,7 @@ class labels extends rcube_plugin
             <ul class="toolbarmenu">';
         foreach ($custom_labels as $key => $value)
         {
-            // TODO escape
-            $out .= '<li data-label="'.$key.'"><a href="#" class="active"><span class="checkmark-container"><span style="display: none" class="checkmark">&#10004;</span></span> <span class="label-text">'.$value.'</span></a></li>';
+            $out .= '<li data-label="'.html::quote($key).'"><a href="#" class="active"><span class="checkmark-container"><span style="display: none" class="checkmark">&#10004;</span></span> <span class="label-text">'.html::quote($value).'</span></a></li>';
         }
         $out .= '</ul>
         </div>';

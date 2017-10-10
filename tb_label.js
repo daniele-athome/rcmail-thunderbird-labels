@@ -26,6 +26,7 @@ function rcm_tb_label_insert(uid, row)
         message.flags.tb_labels.sort(function(a,b) {return a-b;});
         for (var idx in message.flags.tb_labels) {
           var label_span = $("<span class='label'></span>");
+          label_span.addClass("label"+message.flags.tb_labels[idx]);
           label_span.text(message.flags.tb_labels[idx]);
           spanobj.append(label_span);
         }

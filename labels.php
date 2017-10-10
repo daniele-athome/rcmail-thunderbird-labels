@@ -35,6 +35,7 @@ class labels extends rcube_plugin
             $this->add_hook('message_load', array($this, 'read_single_flags'));
             $this->add_hook('template_object_messageheaders', array($this, 'color_headers'));
             $this->add_hook('render_page', array($this, 'tb_label_popup'));
+            $this->add_hook('imap_search_before', array($this, 'exclude_virtual_search'));
             $this->include_stylesheet($this->local_skin_path() . '/tb_label.css');
 
             $this->name = get_class($this);
@@ -332,6 +333,32 @@ class labels extends rcube_plugin
         </div>';
         $this->rc->output->add_gui_object('tb_label_popup_obj', 'tb_label_popup');
         $this->rc->output->add_footer($out);
+    }
+
+    function exclude_virtual_search($args)
+    {
+        // exclude all folders with the configured prefix
+        $exclude = $this->rc->config->get('tb_prefix_exclude_search');
+        if (is_array($args['folder'])) {
+            $folder = [];
+            foreach ($args['folder'] as $f) {
+                if (strpos($f, $exclude) !== 0) {
+                    $folder[] = $f;
+                }
+            }
+        }
+        else {
+            // if folder is not an array, we are forcing our search into the virtual folders, but that's ok
+            $folder = $args['folder'];
+        }
+
+        return [
+            'folder'     => $folder,
+            'search'     => $args['search'],
+            'charset'    => $args['charset'],
+            'sort_field' => $args['sort_field'],
+            'result'     => null,
+        ];
     }
 
 }

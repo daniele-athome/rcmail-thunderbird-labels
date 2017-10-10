@@ -6,3 +6,6 @@ $rcmail_config['tb_label_exclude'] = [
     'Junk',
     'Recent',
 ];
+
+// exclude prefix from search
+$rcmail_config['tb_prefix_exclude_search'] = 'Virtual.';

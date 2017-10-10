@@ -183,7 +183,7 @@ class labels extends rcube_plugin
 
     private function get_permflags()
     {
-        if (!$this->_permflags)
+        if (!$this->_permflags && $this->rc->imap)
             $this->_permflags = $this->rc->imap->get_permflags('INBOX');
         return $this->_permflags;
     }

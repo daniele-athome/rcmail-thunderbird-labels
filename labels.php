@@ -339,7 +339,7 @@ class labels extends rcube_plugin
     {
         // exclude all folders with the configured prefix
         $exclude = $this->rc->config->get('tb_prefix_exclude_search');
-        if (is_array($args['folder'])) {
+        if (!empty($exclude) && is_array($args['folder'])) {
             $folder = [];
             foreach ($args['folder'] as $f) {
                 if (strpos($f, $exclude) !== 0) {

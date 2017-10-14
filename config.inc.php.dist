@@ -5,6 +5,7 @@ $rcmail_config['tb_label_exclude'] = [
     'NonJunk',
     'Junk',
     'Recent',
+    '$Forwarded',
 ];
 
 // exclude prefix from search

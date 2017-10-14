@@ -19,7 +19,8 @@ class labels extends rcube_plugin
     function init()
     {
         $this->rc = rcmail::get_instance();
-        $this->load_config();
+        $this->load_config('config.inc.php.dist');
+        $this->load_config('config.inc.php');
         $this->add_texts('localization/', false);
 
         $this->setCustomLabels();

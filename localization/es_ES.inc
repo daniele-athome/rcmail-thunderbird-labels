@@ -11,13 +11,12 @@
 */
 
 $labels = array();
-$labels['label'] = 'Etiquetas Thunderbird';
-$labels['label0'] = 'Eliminar Etiquetas';
-$labels['label1'] = 'Importante';
-$labels['label2'] = 'Trabajo';
-$labels['label3'] = 'Personal';
-$labels['label4'] = 'Por Hacer';
-$labels['label5'] = 'Más Tarde';
+$labels['label'] = 'Etiquetas';
+$labels['label0'] = 'Importante';
+$labels['label1'] = 'Trabajo';
+$labels['label2'] = 'Personal';
+$labels['label3'] = 'Por Hacer';
+$labels['label4'] = 'Más Tarde';
 
 $messages = array();
 

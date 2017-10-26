@@ -140,13 +140,11 @@ class labels extends rcube_plugin
 
         if (!in_array('tb_label_custom_labels', $dont_override))
         {
-            $args['prefs']['tb_label_custom_labels'] = [
-                rcube_utils::get_input_value('tb_label_custom_labels0', rcube_utils::INPUT_POST),
-                rcube_utils::get_input_value('tb_label_custom_labels1', rcube_utils::INPUT_POST),
-                rcube_utils::get_input_value('tb_label_custom_labels2', rcube_utils::INPUT_POST),
-                rcube_utils::get_input_value('tb_label_custom_labels3', rcube_utils::INPUT_POST),
-                rcube_utils::get_input_value('tb_label_custom_labels4', rcube_utils::INPUT_POST),
-            ];
+            $args['prefs']['tb_label_custom_labels'] = [];
+            for($i=0; $i<10; $i++) {
+                $args['prefs']['tb_label_custom_labels'][] =
+                    rcube_utils::get_input_value('tb_label_custom_labels'.$i, rcube_utils::INPUT_POST);
+            }
         }
 
         return $args;

@@ -169,13 +169,6 @@ display: block;
 position:relative;
 }
 
-/* hack for firefox : doesnt display the bullets at the correct height */
-@-moz-document url-prefix() {
-  span.tb_label_dots {
-    top: -18px;
-  }
-}
-
 span.tb_label_dots span {
   vertical-align: middle;
   margin-left: 4px;

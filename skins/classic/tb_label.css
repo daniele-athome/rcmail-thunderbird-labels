@@ -173,7 +173,7 @@ top: 6px;
 /* hack for firefox : doesnt display the bullets at the correct height */
 @-moz-document url-prefix() {
   span.tb_label_dots {
-    top: -12px;
+    top: 2px;
   }
 }
 
